@@ -539,6 +539,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 会先执行实现了BeanDefinitionRegistryPostProcessor接口的类，然后执行BeanFactoryPostProcessor的类
 				// ConfigurationClassPostProcessor类的postProcessorBeanFactory()方法进行了@Configuration类的解析，@ComponentScan的扫描，以及@Import注解的处理
 				// 经过这一步以后，已经将所有的bean的BeanDefinition放入到beanFactory的beanDefinitionMap中
+				// 同时ConfigurationClassPostProcessor类的postProcessorBeanFactory()方法执行完后，向容器中添加了一个后置处理器————ImportAwareBeanPostProcessor
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.

@@ -245,13 +245,19 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 					"postProcessBeanFactory already called on this post-processor against " + beanFactory);
 		}
 		this.factoriesPostProcessed.add(factoryId);
+		// 下面的if语句不会进入，因为在执行BeanFactoryPostProcessor时，会先执行BeanDefinitionRegistryPostProcessor的postProcessorBeanDefinitionRegistry()方法
+		// 而在执行postProcessorBeanDefinitionRegistry方法时，都会调用processConfigBeanDefinitions方法，这与postProcessorBeanFactory()方法的执行逻辑是一样的
+		// postProcessorBeanFactory()方法也会调用processConfigBeanDefinitions方法，为了避免重复执行，所以在执行方法之前会先生成一个id，将id放入到一个set当中，每次执行之前
+		// 先判断id是否存在，所以在此处，永远不会进入到if语句中
 		if (!this.registriesPostProcessed.contains(factoryId)) {
 			// BeanDefinitionRegistryPostProcessor hook apparently not supported...
 			// Simply call processConfigurationClasses lazily at this point then.
+			// 该方法在这里不会被执行到
 			processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);
 		}
-
+		// 对加了@Configuration注解的配置类进行Cglib代理
 		enhanceConfigurationClasses(beanFactory);
+		// 添加一个BeanPostProcessor后置处理器
 		beanFactory.addBeanPostProcessor(new ImportAwareBeanPostProcessor(beanFactory));
 	}
 
@@ -316,7 +322,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		do {
 			// 解析配置类，在此处会解析重配置类上的注解(ComponentScan扫描出的类，@Import注册的类，以及@Bean方法定义的类)
 			// 解析完以后(解析成ConfigurationClass类)，会将解析出的结果放入到parser的configurationClasses这个属性Map中
-			// parse会解析出@Import要注册的bean定义，但是不会把bean的BeanDefinition放入到BDMap中，真正放入到map中是在下面的this.reader.loadBeanDefinitions()方法中实现的
+			// parse会解析出@Import要注册的bean的定义，但是不会把bean的BeanDefinition放入到BDMap中，真正放入到map中是在下面的this.reader.loadBeanDefinitions()方法中实现的
 			parser.parse(candidates);
 			parser.validate();
 

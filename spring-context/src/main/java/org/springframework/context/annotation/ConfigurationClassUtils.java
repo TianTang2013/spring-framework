@@ -110,9 +110,11 @@ abstract class ConfigurationClassUtils {
 		}
 
 		if (isFullConfigurationCandidate(metadata)) {
+			// 含有@Configuration注解
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
 		else if (isLiteConfigurationCandidate(metadata)) {
+			// 含有@Bean,@Component,@ComponentScan,@Import,@ImportResource注解
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
 		else {
@@ -151,6 +153,10 @@ abstract class ConfigurationClassUtils {
 	}
 
 	/**
+	 * 该方法通过类的元数据信息来判断一个类的BeanDefinition中ConfigurationClassPostProcessor.configurationClass属性是否是lite，
+	 * 如果该类被添加了@Component,@ComponentScan,@Import,@ImportSource注解，
+	 * 或者含有被加了@Bean注解的方法，那么就会返回true,否则为false
+	 *
 	 * Check the given metadata for a lite configuration class candidate
 	 * (e.g. a class annotated with {@code @Component} or just having
 	 * {@code @Import} declarations or {@code @Bean methods}).

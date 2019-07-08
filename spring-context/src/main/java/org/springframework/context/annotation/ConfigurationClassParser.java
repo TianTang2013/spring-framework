@@ -299,6 +299,10 @@ class ConfigurationClassParser {
 					if (bdCand == null) {
 						bdCand = holder.getBeanDefinition();
 					}
+					// 判断bean类是否是一个配置类，这里的配置类的含义值指的不仅仅是加了@Configuration注解的类
+					// 还包括加了@Componnet,@ComponentScan,@Import,@ImportResource,@Bean注解的类
+					// ConfigurationClassUtils.checkConfigurationClassCandidate方法返回true表示bean类是一个配置类，否则不是
+					// 同时如果该bean为配置类，那么该方法还会给bean的BeanDefinition中添加一个属性，将CONFIGURATION_CLASS_ATTRIBUTE设置为full或者lite
 					if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
 						parse(bdCand.getBeanClassName(), holder.getBeanName());
 					}
@@ -307,6 +311,8 @@ class ConfigurationClassParser {
 		}
 
 		// Process any @Import annotations
+		// 处理Import注解注册的bean，这一步只会将import注册的bean变为ConfigurationClass,不会变成BeanDefinition
+		// 而是在loadBeanDefinitions()方法中变成BeanDefinition，再放入到BeanDefinitionMap中
 		processImports(configClass, sourceClass, getImports(sourceClass), true);
 
 		// Process any @ImportResource annotations
