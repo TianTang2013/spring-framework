@@ -195,6 +195,7 @@ class ConstructorResolver {
 								paramNames = pnd.getParameterNames(candidate);
 							}
 						}
+						// 从beanFactory中找到bean构造器依赖的bean
 						argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw, paramTypes, paramNames,
 								getUserDeclaredConstructor(candidate), autowiring);
 					}
@@ -255,7 +256,7 @@ class ConstructorResolver {
 						"(hint: specify index/type/name arguments for simple parameters to avoid type ambiguities): " +
 						ambiguousConstructors);
 			}
-
+			// 缓存实例化bean时所使用的构造器
 			if (explicitArgs == null) {
 				argsHolderToUse.storeCache(mbd, constructorToUse);
 			}

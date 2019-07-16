@@ -284,14 +284,18 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			if (!typeCheckOnly) {
+				// 标记bean为已创建或者即将创建
+				// 并清除beanDefinition的缓存(mergedBeanDefinitions)
 				markBeanAsCreated(beanName);
 			}
 
 			try {
 				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
+				// 检查bean是否是抽象类
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on.
+				// 保证当前bean所依赖的bean初始化
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
@@ -396,6 +400,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	public boolean containsBean(String name) {
 		String beanName = transformedBeanName(name);
 		if (containsSingleton(beanName) || containsBeanDefinition(beanName)) {
+			// bean名称不是以&开头或者bean是一个工厂bean
 			return (!BeanFactoryUtils.isFactoryDereference(name) || isFactoryBean(name));
 		}
 		// Not found -> check parent.
@@ -1635,10 +1640,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
+
+		// 如果不是一个FactoryBean对象或者是获取FactoryBean的原生对象(原生对象指的是beanName是以&开头)
+		// 此时可以直接返回bean
 		if (!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) {
 			return beanInstance;
 		}
 
+		// 如果是获取FactoryBean的getObject()方法返回的类型对象，则需要进入到如下逻辑
+		// 对于getObject()方法，它返回的对象是在在第一次调用getObject方法时进行实例化的，实例化完成以后，会将结果缓存在factoryBeanObjectCache中
 		Object object = null;
 		if (mbd == null) {
 			object = getCachedObjectForFactoryBean(beanName);

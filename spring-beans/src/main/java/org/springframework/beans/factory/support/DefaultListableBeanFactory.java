@@ -325,7 +325,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 
 	//---------------------------------------------------------------------
-	// Implementation of remaining BeanFactory methods
+	// Implementation of remaining BeanFactory methods					   |
 	//---------------------------------------------------------------------
 
 	@Override
@@ -731,7 +731,8 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		for (String beanName : beanNames) {
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
-				// 判断是否是factoryBean
+				// 判断是否是factoryBean,如果是FactoryBean，则进行FactoryBean原生的实例化(非getObject()方法对应的对象)。
+				// 还需要判断它是否立即实例化getObject()返回的对象，根据SmartFactoryBean的isEagerInit()的返回值判断是否需要立即实例化
 				if (isFactoryBean(beanName)) {
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
@@ -1085,7 +1086,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						converter.convertIfNecessary(value, type, descriptor.getField()) :
 						converter.convertIfNecessary(value, type, descriptor.getMethodParameter()));
 			}
-
+			// 处理数组类型、Collection、Map类型的属性
 			Object multipleBeans = resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, typeConverter);
 			if (multipleBeans != null) {
 				return multipleBeans;
@@ -1102,6 +1103,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			String autowiredBeanName;
 			Object instanceCandidate;
 
+			// 先根据类型匹配出可以依赖注入的bean，如果匹配出多个，则再根据属性名匹配
 			if (matchingBeans.size() > 1) {
 				autowiredBeanName = determineAutowireCandidate(matchingBeans, descriptor);
 				if (autowiredBeanName == null) {
@@ -1127,11 +1129,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (autowiredBeanNames != null) {
 				autowiredBeanNames.add(autowiredBeanName);
 			}
+			// 对于一般的属性注入，比如indexService中注入indexMapper时，此处instanceCandidate的类型为IndexMapper.class，所以会走下面的逻辑
+			// 但是对于Mybatis,向Mapper中注入sqlSessionFactory时，此处instanceCandidate为DefaultSqlSessionFactory
 			if (instanceCandidate instanceof Class) {
+				// 处理依赖的值，实现自动装配
 				instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
 			}
 			Object result = instanceCandidate;
 			if (result instanceof NullBean) {
+				// 如果没从容器中找到对应的bean，则需要判断属性值是否是必须注入的，即@Autowired(required=false/true),如果为true,则抛异常，这就是经常项目启动时，我们看到的异常
 				if (isRequired(descriptor)) {
 					raiseNoMatchingBeanFound(type, descriptor.getResolvableType(), descriptor);
 				}
@@ -1269,6 +1275,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		String[] candidateNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 				this, requiredType, true, descriptor.isEager());
 		Map<String, Object> result = new LinkedHashMap<>(candidateNames.length);
+		// 判断需要注入的对象是否是spring内部的bean，例如：BeanFactory,ApplicationContext,ApplicationEventPublisher,ResourceLoader
 		for (Class<?> autowiringType : this.resolvableDependencies.keySet()) {
 			if (autowiringType.isAssignableFrom(requiredType)) {
 				Object autowiringValue = this.resolvableDependencies.get(autowiringType);

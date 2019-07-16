@@ -89,8 +89,8 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 	int AUTOWIRE_BY_TYPE = 2;
 
 	/**
-		 * Constant that indicates autowiring the greediest constructor that
-		 * can be satisfied (involves resolving the appropriate constructor).
+	 * Constant that indicates autowiring the greediest constructor that
+	 * can be satisfied (involves resolving the appropriate constructor).
 	 * @see #createBean
 	 * @see #autowire
 	 */

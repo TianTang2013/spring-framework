@@ -543,18 +543,25 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 注册所有的BeanPostProcessor，因为在方法里面调用了getBean()方法，所以在这一步，实际上已经将所有的BeanPostProcessor实例化了
+				// 最后再重新注册了ApplicationListenerDetector，这样做的目的是为了将ApplicationListenerDetector放入到后置处理器的最末端
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				// 初始化事件广播器，如果容器中存在了名字为applicationEventMulticaster的广播器，则使用该广播器
+				// 如果没有，则初始化一个SimpleApplicationEventMulticaster
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// 执行其他的初始化操作，例如和SpringMVC整合时，需要初始化一些其他的bean，但是对于纯spring工程来说，onFresh方法是一个空方法
 				onRefresh();
 
 				// Check for listener beans and register them.
+				// 这一步会将自定义的listener的bean名称放入到事件广播器中
+				// 同时还会将早期的ApplicationEvent发布(目前暂时不知存在哪些早期ApplicationEvent)
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
@@ -867,6 +874,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
 		// Initialize conversion service for this context.
+		// 初始化转换服务
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
 			beanFactory.setConversionService(
@@ -876,6 +884,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Register a default embedded value resolver if no bean post-processor
 		// (such as a PropertyPlaceholderConfigurer bean) registered any before:
 		// at this point, primarily for resolution in annotation attribute values.
+		// 如果前面没有注册一个类似于PropertyPlaceholderConfigurer后置处理器的bean，那么在这儿会注册一个内置的属性后置处理器
+		// 这儿主要是处理被加了注解的属性
 		if (!beanFactory.hasEmbeddedValueResolver()) {
 			beanFactory.addEmbeddedValueResolver(strVal -> getEnvironment().resolvePlaceholders(strVal));
 		}
@@ -890,9 +900,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.setTempClassLoader(null);
 
 		// Allow for caching all bean definition metadata, not expecting further changes.
+		// 将BeanFactory的configurationFrozen属性设置为true,给frozenBeanDefinitionNames属性赋值
+		// 目的是为了不让在其他的地方在修改bean的BeanDefinition
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		// 实例化剩下所有的非懒加载的单例
 		beanFactory.preInstantiateSingletons();
 	}
 

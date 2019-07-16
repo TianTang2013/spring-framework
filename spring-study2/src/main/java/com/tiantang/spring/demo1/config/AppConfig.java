@@ -17,6 +17,6 @@ import org.springframework.context.annotation.Import;
 @ComponentScan("com.tiantang.spring.demo1")
 //@Import(Registrar.class)
 //@Import(ImportSelector.class)
-@Import(ImportDirectBean.class)
+//@Import(ImportDirectBean.class)
 public class AppConfig {
 }

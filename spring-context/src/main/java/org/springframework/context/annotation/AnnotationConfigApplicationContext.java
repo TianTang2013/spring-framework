@@ -85,7 +85,11 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * e.g. {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
+		// 会初始化一个BeanFactory,为默认的DefaultListableBeanFactory
+		// 会初始化一个beanDefinition的读取器，同时向容器中注册了7个spring的后置处理器(包括BeanPostProcessor和BeanFactoryPostProcessor)
+		// 会初始化一个扫描器，后面似乎并没有用到这个扫描器，在refresh()中使用的是重新new的一个扫描器。
 		this();
+		// 将配置类注册进BeanDefinitionMap中
 		register(annotatedClasses);
 		refresh();
 	}
