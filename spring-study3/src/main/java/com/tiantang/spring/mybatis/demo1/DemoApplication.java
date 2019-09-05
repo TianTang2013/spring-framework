@@ -18,10 +18,10 @@ public class DemoApplication {
 
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-//		UserService userService= annotationConfigApplicationContext.getBean(UserService.class);
-//		System.out.println(userService.userList());
-		UserMapper userMapper = annotationConfigApplicationContext.getBean(UserMapper.class);
-		List<User> users = userMapper.queryList();
-		System.out.println(users);
+		UserService userService= annotationConfigApplicationContext.getBean(UserService.class);
+		System.out.println(userService.userList());
+//		UserMapper userMapper = annotationConfigApplicationContext.getBean(UserMapper.class);
+//		List<User> users = userMapper.queryList();
+//		System.out.println(users);
 	}
 }

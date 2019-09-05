@@ -482,6 +482,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			// 第一次调用后置处理器(执行所有InstantiationAwareBeanPostProcessor的子类)
+			// 如果InstantiationAwareBeanPostProcessor的子类的postProcessBeforeInstantiation()方法返回值不为空，表示bean需要被增强，
+			// 此时将不会执行后面的逻辑，AOP的实际应用就是在这儿实现的
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -1044,6 +1046,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				if (targetType != null) {
 					// 这里执行的是InstantiationAwareBeanPostProcessor后置处理器
 					// 作用是判断bean是否需要增强，如果确定不需要增强，则直接返回返回一个Object。
+					// AOP的实际应用就是在这儿实现的，参考AnnotationAwareAspectJAutoProxyCreator
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
 					if (bean != null) {
 						// 如果bean不需要增强，则执行所有PostProcessor的postProcessAfterInitialization方法
@@ -1073,6 +1076,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		for (BeanPostProcessor bp : getBeanPostProcessors()) {
 			if (bp instanceof InstantiationAwareBeanPostProcessor) {
 				InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+				// postProcessBeforeInstantiation()方法返回null，表示不对bean进行特殊处理，如果返回非null，会造成后面的InstantiationAwareBeanPostProcessor短路
 				Object result = ibp.postProcessBeforeInstantiation(beanClass, beanName);
 				if (result != null) {
 					return result;
@@ -1334,6 +1338,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				autowireByName(beanName, mbd, bw, newPvs);
 			}
 			// Add property values based on autowire by type if applicable.
+			// 对于MyBatis而言，Mapper在实例化之后，会填充属性，这个时候，需要找到MapperFactoryBean有哪些属性需要填充
+			// 在Mapper的BeanDefinition初始化时，默认添加了一个属性，addToConfig
+			// 在下面的if逻辑中，执行完autowireByType()方法后，会找出另外另个需要填充的属性，分别是sqlSessionFactory和sqlSessionTemplate
 			if (mbd.getResolvedAutowireMode() == AUTOWIRE_BY_TYPE) {
 				autowireByType(beanName, mbd, bw, newPvs);
 			}
@@ -1435,6 +1442,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					// Do not allow eager init for type matching in case of a prioritized post-processor.
 					boolean eager = !PriorityOrdered.class.isInstance(bw.getWrappedInstance());
 					DependencyDescriptor desc = new AutowireByTypeDependencyDescriptor(methodParam, eager);
+
+					// 处理bean依赖的属性，同时会把依赖的属性所对应容器的它中的bean给找出来，即给autowiredBeanNames赋值
+					// 例如，当MapperFactoryBean在处理sqlSessionFactory属性的时候，就是从容器中找到sqlSessionFactory，
+					// 然后注入给MapperFactoryBean的属性，同时autowiredBeanNames的值将会为sqlSessionFactory
+					// TODO 有一个问题，MapperFactoryBean有两个属性需要注入，sqlSessionFactory和sqlSessionTemplate，对于sqlSessionTemplate在处理依赖的时候，为什么autowiredArgument返回的是null
 					Object autowiredArgument = resolveDependency(desc, beanName, autowiredBeanNames, converter);
 					if (autowiredArgument != null) {
 						pvs.add(propertyName, autowiredArgument);
@@ -1457,6 +1469,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
 	/**
+	 * 该方法是通过set方法找到非简单类型的且不在mbd.getPropertyValues()中的属性
+	 * 非简单类型包括：基本数据类型，包装类型，Date，String,Class，Local等等，具体可以参考BeanUtils.isSimpleProperty()方法
 	 * Return an array of non-simple bean properties that are unsatisfied.
 	 * These are probably unsatisfied references to other beans in the
 	 * factory. Does not include simple properties like primitives or Strings.
@@ -1470,6 +1484,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		PropertyValues pvs = mbd.getPropertyValues();
 		PropertyDescriptor[] pds = bw.getPropertyDescriptors();
 		for (PropertyDescriptor pd : pds) {
+			// setter或者isXXX (针对boolean类型的属性)方法为空
 			if (pd.getWriteMethod() != null && !isExcludedFromDependencyCheck(pd) && !pvs.contains(pd.getName()) &&
 					!BeanUtils.isSimpleProperty(pd.getPropertyType())) {
 				result.add(pd.getName());

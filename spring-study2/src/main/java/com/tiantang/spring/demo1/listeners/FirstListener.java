@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * @Description: TODO
  * @date 2019/7/9 3:45 PM
  */
-//@Component
+@Component
 public class FirstListener implements ApplicationListener<ApplicationEvent> {
 
 	@Override

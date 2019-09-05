@@ -185,7 +185,7 @@ class ConfigurationClassParser {
 			}
 		}
 
-		// 延迟处理importSelector
+		// 处理延迟importSelector
 		processDeferredImportSelectors();
 	}
 

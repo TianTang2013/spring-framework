@@ -71,7 +71,7 @@ import org.springframework.util.ReflectionUtils;
  * @see #enhance
  * @see ConfigurationClassPostProcessor
  */
-class ConfigurationClassEnhancer {
+public class ConfigurationClassEnhancer {
 
 	// The callbacks to use. Note that these callbacks must be stateless.
 	private static final Callback[] CALLBACKS = new Callback[] {
@@ -263,6 +263,7 @@ class ConfigurationClassEnhancer {
 
 
 	/**
+	 * 为CGLIB代理的对象设置BeanFactory(如果在创建CGLIB代理时，添加了CALLBACK是有BeanFactoryAwareMethodInterceptor类，就会回调该方法)
 	 * Intercepts the invocation of any {@link BeanFactoryAware#setBeanFactory(BeanFactory)} on
 	 * {@code @Configuration} class instances for the purpose of recording the {@link BeanFactory}.
 	 * @see EnhancedConfiguration

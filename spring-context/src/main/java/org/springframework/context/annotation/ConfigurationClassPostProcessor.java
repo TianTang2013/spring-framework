@@ -320,9 +320,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
 		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
 		do {
-			// 解析配置类，在此处会解析重配置类上的注解(ComponentScan扫描出的类，@Import注册的类，以及@Bean方法定义的类)
-			// 解析完以后(解析成ConfigurationClass类)，会将解析出的结果放入到parser的configurationClasses这个属性Map中
-			// parse会解析出@Import要注册的bean的定义，但是不会把bean的BeanDefinition放入到BDMap中，真正放入到map中是在下面的this.reader.loadBeanDefinitions()方法中实现的
+			// 解析配置类，在此处会解析配置类上的注解(ComponentScan扫描出的类，@Import注册的类，以及@Bean方法定义的类)
+			// 注意：这一步只会将加了@Configuration注解以及通过@ComponentScan注解扫描的类才会加入到BeanDefinitionMap中
+			// 通过其他注解(例如@Import、@Bean)的方式，在parse()方法这一步并不会将其解析为BeanDefinition放入到BeanDefinitionMap中，而是先解析成ConfigurationClass类
+			// 真正放入到map中是在下面的this.reader.loadBeanDefinitions()方法中实现的
 			parser.parse(candidates);
 			parser.validate();
 

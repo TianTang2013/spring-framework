@@ -734,6 +734,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				// 判断是否是factoryBean,如果是FactoryBean，则进行FactoryBean原生的实例化(非getObject()方法对应的对象)。
 				// 还需要判断它是否立即实例化getObject()返回的对象，根据SmartFactoryBean的isEagerInit()的返回值判断是否需要立即实例化
 				if (isFactoryBean(beanName)) {
+					// 首先实例化BeanFactory的原生对象，然后再根据isEagerInit()判断是否实例化BeanFactory中getObject()返回的类型的对象
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
 						final FactoryBean<?> factory = (FactoryBean<?>) bean;
@@ -747,6 +748,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							isEagerInit = (factory instanceof SmartFactoryBean &&
 									((SmartFactoryBean<?>) factory).isEagerInit());
 						}
+						// 如果isEagerInit为true,则立即实例化FactoryBean所返回的类型的对象
 						if (isEagerInit) {
 							getBean(beanName);
 						}
@@ -759,6 +761,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		// Trigger post-initialization callback for all applicable beans...
+		// 在bean实例化以及属性赋值完成后，如果bean实现了SmartInitializingSingleton接口，则回调该接口的方法
 		for (String beanName : beanNames) {
 			Object singletonInstance = getSingleton(beanName);
 			if (singletonInstance instanceof SmartInitializingSingleton) {
@@ -1056,6 +1059,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
+				// 真正查找注入属性的代码逻辑
 				result = doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter);
 			}
 			return result;

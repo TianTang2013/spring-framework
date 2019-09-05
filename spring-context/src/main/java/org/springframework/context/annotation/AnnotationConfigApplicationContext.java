@@ -62,6 +62,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		// 此处会先调用父类的构造器，即先执行 super(),初始化DefaultListableBeanFactory
 		// 初始化了bean的读取器，以及将spring内部的6个bean的BeanDefinition方法到BeanDefinitionMap中
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 		// 初始化扫描器

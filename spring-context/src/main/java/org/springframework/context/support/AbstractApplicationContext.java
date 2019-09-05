@@ -521,11 +521,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
-			// 给bean设置序列化id
+			// 给beanFactory设置序列化id
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
 			// 向beanFactory中注册了两个BeanPostProcessor,以及三个和环境相关的bean
+			// ApplicationContextAwareProcessor和ApplicationListenerDetector
 			prepareBeanFactory(beanFactory);
 
 			try {
@@ -556,7 +557,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
-				// 执行其他的初始化操作，例如和SpringMVC整合时，需要初始化一些其他的bean，但是对于纯spring工程来说，onFresh方法是一个空方法
+				// 执行其他的初始化操作，例如和SpringMVC整合时，需要初始化一些其他的bean，但是对于纯spring工程来说，onRefresh方法是一个空方法
 				onRefresh();
 
 				// Check for listener beans and register them.
@@ -853,12 +854,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 		// Do not initialize FactoryBeans here: We need to leave all regular beans
 		// uninitialized to let post-processors apply to them!
+		// 从BeanFactory中找到所有的ApplicationListener，但是不会进行初始化，因为需要在后面bean实例化的过程中，让所有的BeanPostProcessor去改造它们
 		String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, true, false);
 		for (String listenerBeanName : listenerBeanNames) {
+			// 将事件监听器的beanName放入到事件广播器中
 			getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
 		}
 
 		// Publish early application events now that we finally have a multicaster...
+		// 发布早期的事件(似乎一个都没有)
 		Set<ApplicationEvent> earlyEventsToProcess = this.earlyApplicationEvents;
 		this.earlyApplicationEvents = null;
 		if (earlyEventsToProcess != null) {

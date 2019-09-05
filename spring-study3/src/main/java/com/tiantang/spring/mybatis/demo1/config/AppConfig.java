@@ -1,13 +1,20 @@
 package com.tiantang.spring.mybatis.demo1.config;
 
+import org.apache.commons.logging.LogFactory;
+import org.apache.ibatis.logging.jdk14.Jdk14LoggingImpl;
+import org.apache.ibatis.logging.stdout.StdOutImpl;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import java.util.logging.Logger;
 
 /**
  * @author liujinkun
@@ -18,6 +25,7 @@ import javax.sql.DataSource;
 @Configuration
 @ComponentScan("com.tiantang.spring.mybatis.demo1")
 @MapperScan("com.tiantang.spring.mybatis.demo1.dao")
+@EnableTransactionManagement
 public class AppConfig {
 
 	@Bean
@@ -36,4 +44,17 @@ public class AppConfig {
 		sqlSessionFactoryBean.setDataSource(dataSource());
 		return sqlSessionFactoryBean;
 	}
+//
+//	@Bean
+//	public org.apache.ibatis.session.Configuration configuration(){
+//		org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+//		configuration.setLogImpl(StdOutImpl.class);
+//		return configuration;
+//	}
+//
+//	@Bean
+//	public PlatformTransactionManager platformTransactionManager(){
+//		DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dataSource());
+//		return dataSourceTransactionManager;
+//	}
 }

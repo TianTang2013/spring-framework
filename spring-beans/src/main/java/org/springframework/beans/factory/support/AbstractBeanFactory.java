@@ -284,7 +284,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			if (!typeCheckOnly) {
-				// 标记bean为已创建或者即将创建
+				// 标记bean为已创建
 				// 并清除beanDefinition的缓存(mergedBeanDefinitions)
 				markBeanAsCreated(beanName);
 			}
@@ -299,10 +299,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
+						// isDependent()方法用来判断dep是否依赖beanName
 						if (isDependent(beanName, dep)) {
 							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
 									"Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
 						}
+						// 保存下依赖关系
 						registerDependentBean(dep, beanName);
 						try {
 							getBean(dep);
@@ -316,6 +318,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 				// Create bean instance.
 				if (mbd.isSingleton()) {
+					// 此时在getSingleton方法中传入了一个lambda表达式，
+					// 此时不会立即执行lambda表达式，而是在调用这个lambda表达式的getObject()方法时才开始执行lambda的方法体
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
 							return createBean(beanName, mbd, args);
@@ -1661,6 +1665,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				mbd = getMergedLocalBeanDefinition(beanName);
 			}
 			boolean synthetic = (mbd != null && mbd.isSynthetic());
+			// 获取FactoryBean返回的对象
 			object = getObjectFromFactoryBean(factory, beanName, !synthetic);
 		}
 		return object;
