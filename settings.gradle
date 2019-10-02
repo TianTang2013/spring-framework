@@ -33,4 +33,6 @@ include 'spring-study'
 include 'spring-study2'
 include 'spring-study3'
 include 'spring-study4-log'
+include 'spring-autowired'
+include 'spring-enable'
 

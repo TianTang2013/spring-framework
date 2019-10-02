@@ -551,7 +551,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				try {
 					// 第三次执行后置处理器，缓存bean的注解元数据信息(用于后面在进行属性填充时使用)
 					// 这一步对于CommonAnnotationBeanPostProcessor、AutowiredAnnotationBeanPostProcessor、RequiredAnnotationBeanPostProcessor这一类处理器
-					// 主要是将bean的注解信息解析出来，然后缓存到后置处理器中的injectionMetadataMap属性中
+					// 主要是将bean的注解信息解析出来，然后缓存到后置处理器中的injectionMetadataCache属性中
 					// 而对于ApplicationListenerDetector处理器，而是将bean是否是单例的标识存于singletonNames这个Map类型的属性中
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
@@ -1331,6 +1331,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
+		// 判断bean的注入模型是byName，还是byType。
 		if (mbd.getResolvedAutowireMode() == AUTOWIRE_BY_NAME || mbd.getResolvedAutowireMode() == AUTOWIRE_BY_TYPE) {
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
 			// Add property values based on autowire by name if applicable.
@@ -1373,7 +1374,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (pvs != null) {
-			// TODO 填充bean的其他属性？待验证
+			// 实现通过byName或者byType类型的属性注入
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}

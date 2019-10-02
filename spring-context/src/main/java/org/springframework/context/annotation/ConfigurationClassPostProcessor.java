@@ -277,6 +277,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
 				}
 			}
+			// checkConfigurationClassCandidate()会判断一个是否是一个配置类,并为BeanDefinition设置属性为lite或者full。
+			// 在这儿为BeanDefinition设置lite和full属性值是为了后面在使用
+			// 如果加了@Configuration，那么对应的BeanDefinition为full;
+			// 如果加了@Bean,@Component,@ComponentScan,@Import,@ImportResource这些注解，则为lite。lite和full均表示这个BeanDefinition对应的类是一个配置类
 			else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
 				// 判断一个BeanDefinition是否是一个配置类
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
@@ -296,6 +300,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		});
 
 		// Detect any custom bean name generation strategy supplied through the enclosing application context
+		// 设置bean的命名策略
 		SingletonBeanRegistry sbr = null;
 		if (registry instanceof SingletonBeanRegistry) {
 			sbr = (SingletonBeanRegistry) registry;

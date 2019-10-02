@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Import;
  * @Description: TODO
  * @date 2019/8/20 12:01 PM
  */
-@ComponentScan({"com.tiantang.spring.mybatis.demo4.dao","com.tiantang.spring.mybatis.demo4.service"})
+@ComponentScan({"com.tiantang.spring.mybatis.demo4.dao","com.tiantang.spring.mybatis.demo4.service","com.tiantang.spring.mybatis.demo4.listener"})
 //@Import(MyRegistrar.class)
 @Import({MyImportSelector.class,MyRegistrar.class})
 @Configuration

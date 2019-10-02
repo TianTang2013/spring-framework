@@ -1095,8 +1095,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (multipleBeans != null) {
 				return multipleBeans;
 			}
-
+			// 根据需要注入的类型type，从容器中找到有哪些匹配的Bean。
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, type, descriptor);
+			// 如果从容器中没有找到，且@Autowired的required属性为true，那么则会抛出异常
 			if (matchingBeans.isEmpty()) {
 				if (isRequired(descriptor)) {
 					raiseNoMatchingBeanFound(type, descriptor.getResolvableType(), descriptor);
@@ -1107,11 +1108,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			String autowiredBeanName;
 			Object instanceCandidate;
 
-			// 先根据类型匹配出可以依赖注入的bean，如果匹配出多个，则再根据属性名匹配
+			// 先根据类型匹配出可以依赖注入的bean的Class，如果匹配出多个，则再根据属性名匹配
 			if (matchingBeans.size() > 1) {
 				autowiredBeanName = determineAutowireCandidate(matchingBeans, descriptor);
 				if (autowiredBeanName == null) {
 					if (isRequired(descriptor) || !indicatesMultipleBeans(type)) {
+						// 当匹配到多个bean的Class，但是却不知道要选择哪一个注入时，就会抛出异常
 						return descriptor.resolveNotUnique(type, matchingBeans);
 					}
 					else {
@@ -1125,6 +1127,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			else {
 				// We have exactly one match.
+				// 只匹配到一个，则就使用匹配到这个类型
 				Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
 				autowiredBeanName = entry.getKey();
 				instanceCandidate = entry.getValue();
@@ -1136,12 +1139,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			// 对于一般的属性注入，比如indexService中注入indexMapper时，此处instanceCandidate的类型为IndexMapper.class，所以会走下面的逻辑
 			// 但是对于Mybatis,向Mapper中注入sqlSessionFactory时，此处instanceCandidate为DefaultSqlSessionFactory
 			if (instanceCandidate instanceof Class) {
-				// 处理依赖的值，实现自动装配
+				// instanceCandidate是注入属性的类型，这个需要根据Class，通过FactoryBean的getBean()方法，创建该类型的单例bean
 				instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
 			}
 			Object result = instanceCandidate;
 			if (result instanceof NullBean) {
-				// 如果没从容器中找到对应的bean，则需要判断属性值是否是必须注入的，即@Autowired(required=false/true),如果为true,则抛异常，这就是经常项目启动时，我们看到的异常
+				// 如果没从容器中找到对应的bean，则需要判断属性值是否是必须注入的，
+				// 即@Autowired(required=false/true),如果为true,则抛异常，这就是经常项目启动时，我们看到的异常
 				if (isRequired(descriptor)) {
 					raiseNoMatchingBeanFound(type, descriptor.getResolvableType(), descriptor);
 				}
@@ -1345,15 +1349,19 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	protected String determineAutowireCandidate(Map<String, Object> candidates, DependencyDescriptor descriptor) {
 		Class<?> requiredType = descriptor.getDependencyType();
+		// 根据Primary注解来决定优先注入哪个bean
 		String primaryCandidate = determinePrimaryCandidate(candidates, requiredType);
 		if (primaryCandidate != null) {
 			return primaryCandidate;
 		}
+		// 根据@Priority注解的优先级来决定注入哪个bean
 		String priorityCandidate = determineHighestPriorityCandidate(candidates, requiredType);
 		if (priorityCandidate != null) {
 			return priorityCandidate;
 		}
 		// Fallback
+		// 如果既没有指定@Primary，也没有指定@Priority，那么就会根据属性的名称来决定注入哪个bean
+		// 如果要注入的属性的名称与Bean的beanName相同或者别名相同，那么会就会优先注入这个Bean
 		for (Map.Entry<String, Object> entry : candidates.entrySet()) {
 			String candidateName = entry.getKey();
 			Object beanInstance = entry.getValue();
@@ -1362,6 +1370,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				return candidateName;
 			}
 		}
+		// 前面三种情况都没有确定要注入哪个bean，那么就返回null。当返回null时，那么就会再调用该方法出抛出异常。
 		return null;
 	}
 

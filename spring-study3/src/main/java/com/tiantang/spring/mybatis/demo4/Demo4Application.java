@@ -18,7 +18,7 @@ public class Demo4Application {
 		System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "/Users/liujinkun/Downloads/CGLIBTemp");
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig4.class);
 		System.out.println(applicationContext.getBean(InterfaceMethodBean.class));
-		System.out.println(applicationContext.getBean(AppConfigParent.class));
+//		System.out.println(applicationContext.getBean(AppConfigParent.class));
 		applicationContext.close();
 	}
 }

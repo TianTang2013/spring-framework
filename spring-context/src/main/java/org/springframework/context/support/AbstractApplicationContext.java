@@ -563,6 +563,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// Check for listener beans and register them.
 				// 这一步会将自定义的listener的bean名称放入到事件广播器中
 				// 同时还会将早期的ApplicationEvent发布(目前暂时不知存在哪些早期ApplicationEvent)
+				// 对于单独的spring工程来说，在此时不会有任何ApplicationEvent发布，但是和springMVC整合时，springMVC会执行onRefresh()方法，在这里会发布事件
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
