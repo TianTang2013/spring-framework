@@ -1,5 +1,6 @@
 package com.tiantang.study.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -10,4 +11,11 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class UserService {
+
+	@Autowired
+	private OrderService orderService;
+
+	public void query(){
+		System.out.println(orderService);
+	}
 }

@@ -152,7 +152,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		synchronized (this.singletonObjects) {
 			if (!this.singletonObjects.containsKey(beanName)) {
 				this.singletonFactories.put(beanName, singletonFactory);
-				// 老子始终就没搞明白，为啥要从这个map中remove掉
+				// 因为singletonFactory.getObject()方法会调用lambda表达式，这里的lambda表达式是执行一次后置处理器，
+				// 会对bean进行一些加工处理，所以需要从earlySingletonObjects中移除，这样能确保在getSingleton(beanName,allowEarlyReference)当中，
+				// 从earlySingletonObjects中获取的bean为空，这样就会进入到后面的逻辑中，调用singletonFactory.getObject()。
 				this.earlySingletonObjects.remove(beanName);
 				this.registeredSingletons.add(beanName);
 			}
@@ -178,12 +180,22 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		Object singletonObject = this.singletonObjects.get(beanName);
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
 			synchronized (this.singletonObjects) {
+				// 第一次进入时，肯定是空
+				// 第二次进入时，就不为空了
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
+					// 从singletonFactories中获取，如果是循环依赖，那么这个这个地方是有可能获取到bean的
+					// 因为在doCreateBean()方法当中，会将半成品的bean放入到singletonFactories属性当中
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
+						// 当调用singletonFactory.getObject()方法时，就会执行lambda表达式，在lambda表达式中，会对bean进行进行一些其他操作
 						singletonObject = singletonFactory.getObject();
+						// 在上一步将bean进行加工后，把它放入到earlySingletonObjects。
 						this.earlySingletonObjects.put(beanName, singletonObject);
+						// 这个时候把它从singletonFactories中移除，为什么要移除呢？
+						// 因为在上一步把它已经放入到了earlySingletonObjects中。
+						// 当第二次进入到getSingleton()时，this.earlySingletonObjects.get(beanName)就不为空了，方法就会直接返回了。所以这个时候
+						// 可以将bean从singletonFactories中移除。
 						this.singletonFactories.remove(beanName);
 					}
 				}

@@ -1,7 +1,7 @@
 package com.tiantang.study;
 
 import com.tiantang.study.config.AppConfig;
-import com.tiantang.study.dao.UserDao;
+import com.tiantang.study.service.OrderService;
 import com.tiantang.study.service.UserService;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -15,8 +15,10 @@ public class MainApplication {
 
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-//		UserDao userDao = applicationContext.getBean(UserDao.class);
-//		System.out.println(userDao);
+		UserService userService = applicationContext.getBean(UserService.class);
+		OrderService orderService = applicationContext.getBean(OrderService.class);
+		userService.query();
+		orderService.query();
 	}
 
 }

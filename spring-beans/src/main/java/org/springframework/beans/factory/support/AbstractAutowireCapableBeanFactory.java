@@ -573,7 +573,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.debug("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
-			// 第四次执行后置处理器
+			// 第四次出现后置处理器(并没有执行)
 			// 获取提前暴露的对象，可以解决循环引用的问题，实际上提前暴露出来的bean是放入到了singletonFactories中，key是beanName,value是一个lambda表达式
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
